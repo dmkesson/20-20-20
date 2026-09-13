@@ -4,49 +4,45 @@ import time
 from dataclasses import dataclass
 
 @dataclass
-class Status:
+class Phases:
     name: str
     duration: int
     colour: str
 
-class EyeTimer():
+class Gui():
     def __init__(self):
         self.root = ttk.Window()
 
-        self.work = Status("Work", 1200, "primary")
-        self.eyeRest = Status("Eye Rest", 20, "success")
-        self.currStatus = self.work
-        self.timerRunning = False
-
-        self.phaseStart = 0
-        self.elapsed = 0
-        self.remaining = 100000
         self.tick_id = None
+
+        self.work = Phases("Work", 1200, "primary")
+        self.eyeRest = Phases("Eye Rest", 20, "success")
+        self.timer = Timer([self.work, self.eyeRest])
     
         # Window Properties
         self.root.title("20-20-20 Timer")
         self.root.geometry("400x600")
 
         # Widgets
-        self.statusLabel = ttk.Label(self.root, textvariable = self.currStatus.name)
+        self.statusLabel = ttk.Label(self.root, textvariable = self.currPhase.name)
         self.statusLabel.pack()
         
-        self.init_meter()
+        self._build_meter()
 
         self.startButton = ttk.Button(self.root, command = self.start_timer, textvariable="Start")
         self.startButton.pack()
 
-    def init_meter(self):
+    def _build_meter(self):
         self.meter = ttk.Meter(self.root, padding = 20)
         self.meter.pack()
-        self.meter.amounttotalvar.set(self.currStatus.duration)
+        self.meter.amounttotalvar.set(self.currPhase.duration)
         self.elapsed = 0
-        self.remaining = self.currStatus.duration
+        self.remaining = self.currPhase.duration
         self.set_meter()
 
     def meter_tick(self):
-        self.elapsed = int(time.monotonic() - self.phaseStart)
-        self.remaining = self.currStatus.duration - self.elapsed
+        elapsed = int(time.monotonic() - self.phaseStart)
+        self.remaining = self.currPhase.duration - self.elapsed
     
         if self.remaining <= 0:
             self.switch_phase()
@@ -55,45 +51,76 @@ class EyeTimer():
         self.tick_id = self.root.after(1000, self.meter_tick)
 
     def set_meter(self):
-        (mm,ss) = divmod(self.remaining, 60)
-        self.meter.amountusedvar.set(self.elapsed)
-        self.meter.amountuseddisplayvar.set(f"{mm}:{ss:02d}")
+        self.meter.amountusedvar.set(self.timer.elapsed())
+        self.meter.amountuseddisplayvar.set(format_seconds(self.timer.remaining()))
 
     def switch_phase(self):
-        if self.currStatus is self.work:
-            self.currStatus = self.eyeRest
-            self.meter.amounttotalvar.set(self.currStatus.duration)
+        if self.timer.currPhase is self.work:
+            self.currPhase = self.eyeRest
+            self.meter.amounttotalvar.set(self.currPhase.duration)
             self.elapsed = 0
-            self.remaining = self.currStatus.duration
+            self.remaining = self.currPhase.duration
             self.set_meter()
         else:
-            self.currStatus = self.work
-            self.meter.amounttotalvar.set(self.currStatus.duration)
+            self.currPhase = self.work
+            self.meter.amounttotalvar.set(self.currPhase.duration)
             self.elapsed = 0
-            self.remaining = self.currStatus.duration
+            self.remaining = self.currPhase.duration
             self.set_meter()
 
     def set_button(self):
-        if timerRunning:
+        if self.timer.isRunning:
             self.root.after_cancel(self.tick_id)
             self.tick_id = None
-            timerRunning = False
+            self.timer.isRunning = False
             
-
-
-
-    # set the meter total, check the current time for time elapsed, call the after function and reset the timer
     def start_timer(self):
         if self.tick_id is not None:
             self.root.after_cancel(self.tick_id)
             
-        self.phaseStart = time.monotonic()
+        self.timer.start_Phase()
         self.meter_tick()
 
     def run(self):
         self.root.mainloop()
 
+class Timer():
+    def __init__(self, phases):
 
-myObject = EyeTimer()
+        self.phases = phases
+        self.currPhase = phases[0]
 
-myObject.run()
+        self.phaseStartTime = None
+        self.pauseDuration = None
+
+        self.isRunning = False
+
+    def elapsed(self):
+        return int(time.monotonic() - self.phaseStartTime)
+
+    def remaining(self):
+        return self.currPhase.duration - self.elapsed()
+
+    def start(self):
+        self.phaseStartTime = time.monotonic()
+        self.isRunning = True
+
+    def is_phase_over(self):
+        return self.elapsed() >= self.currPhase.duration
+
+    def step_phase(self):
+        self.currPhase = self.phases[(self.phases.index(self.currPhase) + 1) % len(self.phases)]
+
+    def pause():
+        pass
+
+    def unpause():
+        pass
+
+def format_seconds(s):
+    (mm,ss) = divmod(s, 60)
+    return f"{mm}:{ss:02d}"
+
+if __name__ == "__main__":
+    myObject = Gui()
+    myObject.run()
