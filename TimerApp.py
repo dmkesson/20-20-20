@@ -91,12 +91,13 @@ class Timer():
         self.currPhase = phases[0]
 
         self.phaseStartTime = None
-        self.pauseDuration = None
+        self.pauseStartTime = None
+        self.totalPauseDuration = 0
 
         self.isRunning = False
 
     def elapsed(self):
-        return int(time.monotonic() - self.phaseStartTime)
+        return int(time.monotonic() - self.phaseStartTime) - self.totalPauseDuration
 
     def remaining(self):
         return self.currPhase.duration - self.elapsed()
@@ -104,18 +105,25 @@ class Timer():
     def start(self):
         self.phaseStartTime = time.monotonic()
         self.isRunning = True
+        self.totalPauseDuration = 0
 
     def is_phase_over(self):
         return self.elapsed() >= self.currPhase.duration
 
     def step_phase(self):
         self.currPhase = self.phases[(self.phases.index(self.currPhase) + 1) % len(self.phases)]
+        self.totalPauseDuration = 0
 
-    def pause():
-        pass
+    def pause(self):
+        self.pauseStartTime = time.monotonic()
+        self.isRunning = False
 
-    def unpause():
-        pass
+    def unpause(self):
+        pauseEndTime = time.monotonic()
+        self.totalPauseDuration += int(pauseEndTime - self.pauseStartTime)
+        self.pauseStartTime = None
+        self.isRunnning = True
+
 
 def format_seconds(s):
     (mm,ss) = divmod(s, 60)

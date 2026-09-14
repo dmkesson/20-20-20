@@ -45,4 +45,34 @@ def test_new_phase_is_correct():
     myTimer.start()
     assert myTimer.currPhase.duration == 5
     assert initTime != myTimer.phaseStartTime
+
+def test_pause_unpause_time_consistency():
+    myTimer = Timer([phase1, phase2])
+    myTimer.step_phase()
+    myTimer.start()
+    sleep(1)
+    myTimer.pause()
+    assert not myTimer.isRunning 
+    sleep(2)
+    myTimer.unpause()
+    sleep(1)
+    assert myTimer.currPhase is myTimer.phases[1]
+    assert myTimer.totalPauseDuration == 2
+    assert myTimer.remaining() == 3
     
+
+def test_multiple_pauses():
+    myTimer = Timer([phase1, phase2])
+    myTimer.step_phase()
+    myTimer.start()
+    sleep(1)
+    myTimer.pause()
+    sleep(1)
+    myTimer.unpause()
+    sleep(1)
+    myTimer.pause()
+    sleep(1)
+    myTimer.unpause()
+    assert myTimer.currPhase is myTimer.phases[1]
+    assert myTimer.totalPauseDuration == 2
+    assert myTimer.remaining() == 3
