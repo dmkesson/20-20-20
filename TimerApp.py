@@ -24,29 +24,33 @@ class Gui():
         self.root.geometry("400x600")
 
         # Widgets
-        self.statusLabel = ttk.Label(self.root, textvariable = self.timer.currPhase.name)
+        self.statusLabel = ttk.Label(self.root, textvariable=self.timer.currPhase.name)
         self.statusLabel.pack()
         
-        self._init_meter()
+        self._build_meter()
 
         # acts as the start, pause, and resume button
         self.buttonText1 = "Start"#
         self.buttonText2 = "Reset"
-        self._init_button()
+        self._build_buttons()
 
-    def _init_meter(self):
-        self.meter = ttk.Meter(self.root, padding = 20)
+    def _build_meter(self):
+        self.meter = ttk.Meter(self.root, padding=20)
         self.meter.pack()
         self.meter.amounttotalvar.set(self.timer.currPhase.duration)
         self.set_meter_non_timer("Begin!")
 
-    def _init_buttons(self):
+    def _build_buttons(self):
+        buttonsFrame = ttk.Frame(self.root, padding=10)
+
         # acts as the start, pause, and resume button
-        self.button1 = ttk.Button(self.root, command = self.start_timer, textvar=self.buttonText1)
-        self.button.pack()
+        self.button1 = ttk.Button(buttonsFrame, command=self.start_timer, textvar=self.buttonText1)
+        self.button1.pack(side="left", padx=10)
+        # acts as the restart button
+        self.button2 = ttk.Button(buttonsFrame, command=None, textvar=self.buttonText2)
+        self.button2.pack(side="right", padx=10)
 
-        self.button2 = ttk.Button(self.root, command = None, textvar = self.buttonText2)
-
+        buttonsFrame.pack()
 
     def meter_tick(self):
         if self.timer.is_phase_over():
