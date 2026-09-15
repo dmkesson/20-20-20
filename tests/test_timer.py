@@ -11,19 +11,19 @@ def test_format_seconds():
 def test_step_phase_first_to_second():
     myTimer = Timer([phase1, phase2])
     myTimer.step_phase()
-    assert myTimer.currPhase is myTimer.phases[1]
+    assert myTimer.curr_phase is myTimer.phases[1]
 
 def test_step_phase_loop():
     myTimer = Timer([phase1, phase2])
-    myTimer.currPhase = myTimer.phases[-1]
-    assert myTimer.currPhase is phase2
+    myTimer.curr_phase = myTimer.phases[-1]
+    assert myTimer.curr_phase is phase2
     myTimer.step_phase()
-    assert myTimer.currPhase is myTimer.phases[0]
+    assert myTimer.curr_phase is myTimer.phases[0]
 
 # tests remaining(), but by extension elapsed() and start()
 def test_remaining():
     myTimer = Timer([phase1, phase2])
-    myTimer.currPhase = myTimer.phases[1]
+    myTimer.curr_phase = myTimer.phases[1]
     myTimer.start()
     sleep(1)
     assert myTimer.remaining() == 4
@@ -38,13 +38,13 @@ def test_is_phase_over():
 def test_new_phase_is_correct():
     myTimer = Timer([phase1, phase2])
     myTimer.start()
-    initTime = myTimer.phaseStartTime
+    initTime = myTimer.phase_start_time
     sleep(2)
     assert myTimer.is_phase_over()
     myTimer.step_phase()
     myTimer.start()
-    assert myTimer.currPhase.duration == 5
-    assert initTime != myTimer.phaseStartTime
+    assert myTimer.curr_phase.duration == 5
+    assert initTime != myTimer.phase_start_time
 
 def test_pause_resume():
     myTimer = Timer([phase1, phase2])
@@ -52,12 +52,12 @@ def test_pause_resume():
     myTimer.start()
     sleep(1)
     myTimer.pause()
-    assert not myTimer.isRunning 
+    assert not myTimer.is_running 
     sleep(2)
     myTimer.resume()
     sleep(1)
-    assert myTimer.currPhase is myTimer.phases[1]
-    assert myTimer.totalPauseDuration == 2
+    assert myTimer.curr_phase is myTimer.phases[1]
+    assert myTimer.total_pause_duration == 2
     assert myTimer.remaining() == 3
     
 
@@ -73,8 +73,8 @@ def test_multiple_pauses():
     myTimer.pause()
     sleep(1)
     myTimer.resume()
-    assert myTimer.currPhase is myTimer.phases[1]
-    assert myTimer.totalPauseDuration == 2
+    assert myTimer.curr_phase is myTimer.phases[1]
+    assert myTimer.total_pause_duration == 2
     assert myTimer.remaining() == 3
 
 def test_reset():
@@ -83,5 +83,5 @@ def test_reset():
     myTimer.start()
     sleep(2)
     myTimer.reset()
-    assert myTimer.currPhase.duration == 1
-    assert not myTimer.isRunning
+    assert myTimer.curr_phase.duration == 1
+    assert not myTimer.is_running
