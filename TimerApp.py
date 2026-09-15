@@ -17,10 +17,12 @@ class Gui():
         self.tick_id = None
         # used when auto mode triggers next phase
         self.auto_tick_id = None
+        self.auto_mode = ttk.BooleanVar()
+        self.systray_mode = ttk.BooleanVar()
 
         self.work = Phases("Work", 5, "primary")
-        self.eyeRest = Phases("Eye Rest", 20, "success")
-        self.timer = Timer([self.work, self.eyeRest])
+        self.eye_rest = Phases("Eye Rest", 20, "success")
+        self.timer = Timer([self.work, self.eye_rest])
     
         # Window Properties
         self.root.title("20-20-20 Timer")
@@ -28,58 +30,70 @@ class Gui():
         
         self._build_meter()
         self._build_buttons()
-        self._build_auto_toggle()
+        self._build_toggles()
 
     def _build_meter(self):
         self.meter = ttk.Meter(self.root, padding=10)
         self.meter.pack()
-        self.meter.amounttotalvar.set(self.timer.currPhase.duration)
-        self.set_meter_non_timer("Begin!")
+        self.meter.amounttotalvar.set(self.timer.curr_phase.duration)
+        self._set_meter_non_timer("Begin!")
 
     def _build_buttons(self):
-        buttonsFrame = ttk.Frame(self.root, padding=10)
+        buttons_frame = ttk.Frame(self.root, padding=10)
         # acts as the start, pause, and resume button
-        self.button1 = ttk.Button(buttonsFrame, command=self.start_timer, text="Start", bootstyle="success", width=10)
+        self.button1 = ttk.Button(buttons_frame, command=self.start_timer, text="Start", bootstyle="success", width=10)
         self.button1.pack(side="left", padx=10)
         # acts as the reset button
-        self.button2 = ttk.Button(buttonsFrame, command=None, text="Reset", bootstyle="secondary", width = 10)
+        self.button2 = ttk.Button(buttons_frame, command=None, text="Reset", bootstyle="secondary", width = 10)
         self.button2.pack(side="right", padx=10)
-        buttonsFrame.pack()
+        buttons_frame.pack()
 
-    def set_button1_start(self):
+    def _set_button1_start(self):
         self.button1.configure(command=self.start_timer, text="Start")
 
-    def set_button1_continue(self):
+    def _set_button1_continue(self):
         self.button1.configure(command=self.start_timer, text="Continue")
 
-    def set_button1_pause(self):
+    def _set_button1_pause(self):
         self.button1.configure(command=self.pause_timer, text="Pause")
         print("set_button1_pause ran!")
 
-    def set_button1_resume(self):
+    def _set_button1_resume(self):
         self.button1.configure(command=self.resume_timer, text="Resume")
         print("set_button1_resume ran!")
 
-    def set_button2_restart(self):
+    def _set_button2_restart(self):
         self.button2.configure(command=self.reset_timer, bootstyle="danger")
 
-    def set_button2_none(self):
+    def _set_button2_none(self):
         self.button2.configure(command=None, bootstyle="secondary")
 
-    def _build_auto_toggle(self):
-        auto_toggle_frame = ttk.Frame(self.root, padding=10)
-        self.auto_mode = ttk.BooleanVar()
+    def _build_toggles(self):
+        toggle_frame = ttk.Frame(self.root, padding=10)
+
+        auto_toggle_frame = ttk.Frame(toggle_frame, padx=10)
         self.auto_toggle = ttk.Checkbutton(auto_toggle_frame, bootstyle="square toggle", variable=self.auto_mode, command=self.on_toggle)
         self.auto_toggle.pack()
         self.auto_label = ttk.Label(auto_toggle_frame, text="Auto continue", bootstyle="secondary")
         self.auto_label.pack()
-        auto_toggle_frame.pack()
+        auto_toggle_frame.pack(side="left")
 
-    def on_toggle(self):
+        systray_toggle_frame = ttk.Frame(toggle_frame, padx=10)
+        self.systray_toggle = ttk.Checkbutton(systray_toggle_frame, bootstyle="square toggle", variable=self.systray_mode)
+        self.systray_toggle.pack()
+        self.systray_label = ttk.Label(systray_toggle_frame, text="Minimize on close", bootstyle="secondary")
+        self.systray_label.pack()
+
+        toggle_frame.pack()
+
+    def on_auto_toggle(self):
         if not self.auto_mode.get():
             if self.auto_tick_id is not None:
                 self.root.after_cancel(self.auto_tick_id)
                 self.auto_tick_id = None
+
+    def on_systray_toggle(self):
+        ...
 
     def meter_tick(self):
         if self.timer.is_phase_over():
@@ -87,60 +101,60 @@ class Gui():
             self.timer.step_phase()
             if self.auto_mode.get():
                 self.auto_tick_id = self.root.after(5000, self.start_timer)
-            self.set_meter_non_timer("Complete!")
-            self.set_button1_continue()
-            self.set_button2_restart()
+            self._set_meter_non_timer("Complete!")
+            self._set_button1_continue()
+            self._set_button2_restart()
             return
 
-        self.set_meter()
+        self._set_meter()
         self.tick_id = self.root.after(1000, self.meter_tick)
 
-    def set_meter(self):
-        self.meter.configure(bootstyle=self.timer.currPhase.colour, subtext=self.timer.currPhase.name)
+    def _set_meter(self):
+        self.meter.configure(bootstyle=self.timer.curr_phase.colour, subtext=self.timer.curr_phase.name)
         self.meter.amountusedvar.set(self.timer.elapsed())
         self.meter.amountuseddisplayvar.set(format_seconds(self.timer.remaining()))
 
-    def set_meter_non_timer(self, string):
-        self.meter.configure(bootstyle="secondary", amountused=1, amounttotal=1, subtext=self.timer.currPhase.name)
+    def _set_meter_non_timer(self, string):
+        self.meter.configure(bootstyle="secondary", amountused=1, amounttotal=1, subtext=self.timer.curr_phase.name)
         self.meter.amountuseddisplayvar.set(string)
     
     def start_timer(self):
         if self.tick_id is not None:
             self.root.after_cancel(self.tick_id)
-        if self.timer.isRunning:
+        if self.timer.is_running:
             return
         
-        self.meter.amounttotalvar.set(self.timer.currPhase.duration)
-        self.set_button1_pause()
-        self.set_button2_none()
+        self.meter.amounttotalvar.set(self.timer.curr_phase.duration)
+        self._set_button1_pause()
+        self._set_button2_none()
         self.timer.start()
         self.meter_tick()
 
     def pause_timer(self):
         print("pause_timer function ran")
-        if not self.timer.isRunning:
+        if not self.timer.is_running:
             return        
         self.root.after_cancel(self.tick_id)
         self.tick_id = None
-        print("cancelled tick_id")
+        print("cancelled tickId")
         self.timer.pause()
         print("cancelled timer")
-        self.set_button1_resume()
+        self._set_button1_resume()
         print("changed button1 to resume")
-        self.set_button2_restart()
+        self._set_button2_restart()
 
     def resume_timer(self):
-        if self.timer.isRunning:
+        if self.timer.is_running:
             return
 
-        self.set_button1_pause()
-        self.set_button2_none()
+        self._set_button1_pause()
+        self._set_button2_none()
         self.timer.resume()
         self.meter_tick()
-        print(self.timer.isRunning)
+        print(self.timer.is_running)
 
     def reset_timer(self):
-        if self.timer.isRunning:
+        if self.timer.is_running:
             return
         if self.tick_id is not None:
             self.root.after_cancel(self.tick_id)
@@ -149,9 +163,9 @@ class Gui():
             self.root.after_cancel(self.auto_tick_id)
             self.auto_tick_id = None
         self.timer.reset()
-        self.set_button1_start()
-        self.set_button2_none()
-        self.set_meter_non_timer("Begin!")
+        self._set_button1_start()
+        self._set_button2_none()
+        self._set_meter_non_timer("Begin!")
 
     def run(self):
         self.root.mainloop()
@@ -160,56 +174,56 @@ class Timer():
     def __init__(self, phases):
 
         self.phases = phases
-        self.currPhase = phases[0]
+        self.curr_phase = phases[0]
 
-        self.phaseStartTime = 0
-        self.pauseStartTime = None
-        self.totalPauseDuration = 0
+        self.phase_start_time = 0
+        self.pause_start_time = None
+        self.total_pause_duration = 0
 
-        self.isRunning = False
+        self.is_running = False
 
     def elapsed(self):
-        return int(time.monotonic() - self.phaseStartTime) - self.totalPauseDuration
+        return int(time.monotonic() - self.phase_start_time) - self.total_pause_duration
 
     def remaining(self):
-        return self.currPhase.duration - self.elapsed()
+        return self.curr_phase.duration - self.elapsed()
 
     def start(self):
-        self.phaseStartTime = time.monotonic()
-        self.isRunning = True
-        self.totalPauseDuration = 0
+        self.phase_start_time = time.monotonic()
+        self.is_running = True
+        self.total_pause_duration = 0
 
     def is_phase_over(self):
-        return self.elapsed() >= self.currPhase.duration
+        return self.elapsed() >= self.curr_phase.duration
 
     def step_phase(self):
-        self.currPhase = self.phases[(self.phases.index(self.currPhase) + 1) % len(self.phases)]
-        self.isRunning = False
+        self.curr_phase = self.phases[(self.phases.index(self.curr_phase) + 1) % len(self.phases)]
+        self.is_running = False
 
     def pause(self):
-        self.pauseStartTime = time.monotonic()
-        self.isRunning = False
+        self.pause_start_time = time.monotonic()
+        self.is_running = False
 
     def resume(self):
-        pauseEndTime = time.monotonic()
-        self.totalPauseDuration += int(pauseEndTime - self.pauseStartTime)
-        self.pauseStartTime = None
-        self.isRunning = True
+        pause_end_time = time.monotonic()
+        self.total_pause_duration += int(pause_end_time - self.pause_start_time)
+        self.pause_start_time = None
+        self.is_running = True
 
     def reset(self):
-        self.phaseStartTime = 0
-        self.pauseStartTime = None
-        self.totalPauseDuration = 0
-        self.currPhase = self.phases[0]
-        self.isRunning = False
+        self.phase_start_time = 0
+        self.pause_start_time = None
+        self.total_pause_duration = 0
+        self.curr_phase = self.phases[0]
+        self.is_running = False
 
 def format_seconds(s):
     (mm,ss) = divmod(s, 60)
     return f"{mm}:{ss:02d}"
 
 def main():
-    myObject = Gui()
-    myObject.run()
+    my_object = Gui()
+    my_object.run()
 
 if __name__ == "__main__":
     main()
