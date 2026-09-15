@@ -118,6 +118,12 @@ class Gui():
         self.timer.resume()
         self.meter_tick() 
 
+    def reset_timer(self):
+        if self.timer.isRunning:
+            return
+        self.timer.reset()
+        self.set_button1_start()
+        self.setbutton2_none()
     def run(self):
         self.root.mainloop()
 

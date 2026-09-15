@@ -76,3 +76,12 @@ def test_multiple_pauses():
     assert myTimer.currPhase is myTimer.phases[1]
     assert myTimer.totalPauseDuration == 2
     assert myTimer.remaining() == 3
+
+def test_reset():
+    myTimer = Timer([phase1, phase2])
+    myTimer.step_phase()
+    myTimer.start()
+    sleep(2)
+    myTimer.reset()
+    assert myTimer.currPhase.duration == 1
+    assert not myTimer.isRunning
