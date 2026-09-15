@@ -15,6 +15,7 @@ class Gui():
         self.root = ttk.Window()
 
         self.tick_id = None
+        self.auto_mode = False
 
         self.work = Phases("Work", 5, "primary")
         self.eyeRest = Phases("Eye Rest", 20, "success")
@@ -22,11 +23,11 @@ class Gui():
     
         # Window Properties
         self.root.title("20-20-20 Timer")
-        self.root.geometry("400x350")
+        self.root.geometry("400x330")
         
         self._build_meter()
-
         self._build_buttons()
+        self._build_auto_toggle()
 
     def _build_meter(self):
         self.meter = ttk.Meter(self.root, padding=10)
@@ -36,15 +37,22 @@ class Gui():
 
     def _build_buttons(self):
         buttonsFrame = ttk.Frame(self.root, padding=10)
-
         # acts as the start, pause, and resume button
         self.button1 = ttk.Button(buttonsFrame, command=self.start_timer, text="Start", bootstyle="success", width=10)
         self.button1.pack(side="left", padx=10)
         # acts as the reset button
         self.button2 = ttk.Button(buttonsFrame, command=None, text="Reset", bootstyle="secondary", width = 10)
         self.button2.pack(side="right", padx=10)
-
         buttonsFrame.pack()
+
+    def _build_auto_toggle(self):
+        auto_toggle_frame = ttk.Frame(self.root, padding=10)
+        self.auto_toggle = ttk.Checkbutton(auto_toggle_frame, bootstyle="square toggle")
+        self.auto_toggle.pack(pady=2)
+        self.auto_label = ttk.Label(auto_toggle_frame, text="Auto continue: off", bootstyle="secondary")
+        self.auto_label.pack()
+
+        auto_toggle_frame.pack()
 
     def set_button1_start(self):
         self.button1.configure(command=self.start_timer, text="Start")
@@ -84,7 +92,7 @@ class Gui():
         self.meter.amountuseddisplayvar.set(format_seconds(self.timer.remaining()))
 
     def set_meter_non_timer(self, string):
-        self.meter.configure(bootstyle="secondary", amountused=1, amounttotal=1)
+        self.meter.configure(bootstyle="secondary", amountused=1, amounttotal=1, subtext=self.timer.currPhase.name)
         self.meter.amountuseddisplayvar.set(string)
     
     def start_timer(self):
