@@ -30,12 +30,12 @@ class Gui():
         self._build_meter()
 
         # acts as the start, pause, and resume button
-        self.buttonText1 = "Start"#
-        self.buttonText2 = "Reset"
+        self.button1Text = "Start"#
+        self.button2Text = "Reset"
         self._build_buttons()
 
     def _build_meter(self):
-        self.meter = ttk.Meter(self.root, padding=20)
+        self.meter = ttk.Meter(self.root, padding=10)
         self.meter.pack()
         self.meter.amounttotalvar.set(self.timer.currPhase.duration)
         self.set_meter_non_timer("Begin!")
@@ -44,43 +44,57 @@ class Gui():
         buttonsFrame = ttk.Frame(self.root, padding=10)
 
         # acts as the start, pause, and resume button
-        self.button1 = ttk.Button(buttonsFrame, command=self.start_timer, textvar=self.buttonText1)
+        self.button1 = ttk.Button(buttonsFrame, command=self.start_timer, textvar=self.button1Text, bootstyle="success")
         self.button1.pack(side="left", padx=10)
-        # acts as the restart button
-        self.button2 = ttk.Button(buttonsFrame, command=None, textvar=self.buttonText2)
+        # acts as the reset button
+        self.button2 = ttk.Button(buttonsFrame, command=None, textvar=self.button2Text, bootstyle="danger ghost")
         self.button2.pack(side="right", padx=10)
 
         buttonsFrame.pack()
+
+    def set_button1_start(self):
+        self.button1Text = "Start"
+        self.button1.configure(command=self.start_timer())
+
+    def set_button1_pause(self):
+        self.button1Text = "Pause"
+        self.button1.configure(command=self.pause_timer())
+
+    def set_button1_resume(self):
+        self.button1Text = "Resume"
+        self.button1.configure(command=self.resume_timer())
+
+    def set_button2_restart(self):
+        self.button2.configure(command=self.start_timer(), bootstyle="danger")
+
+    def set_button2_none(self):
+        self.button2.configure(command=None, bootstyle="danger ghost")
 
     def meter_tick(self):
         if self.timer.is_phase_over():
             self.set_meter_non_timer()
             self.timer.step_phase()
-            #here i need a method to wait for user input to start the next phase
+            self.set_button1_start()
+            return
 
         self.set_meter()
         self.tick_id = self.root.after(1000, self.meter_tick)
 
     def set_meter(self):
+        self.meter.configure(bootstyle=self.timer.currPhase.colour)
         self.meter.amountusedvar.set(self.timer.elapsed())
         self.meter.amountuseddisplayvar.set(format_seconds(self.timer.remaining()))
-        self.meter.configure(bootstyle=self.timer.currPhase.colour)
 
     def set_meter_non_timer(self, string):
         self.meter.configure(bootstyle="secondary", amountused=1, amounttotal=1)
         self.meter.amountuseddisplayvar.set(string)
-
-    def set_button(self):
-        if self.timer.isRunning:
-            self.root.after_cancel(self.tick_id)
-            self.tick_id = None
-            self.timer.isRunning = False
             
     def start_timer(self):
         if self.tick_id is not None:
             self.root.after_cancel(self.tick_id)
             
         self.meter.amounttotalvar.set(self.timer.currPhase.duration)
+        self.set_button1_pause()
         self.timer.start()
         self.meter_tick()
 
@@ -120,7 +134,7 @@ class Timer():
         self.pauseStartTime = time.monotonic()
         self.isRunning = False
 
-    def unpause(self):
+    def resume(self):
         pauseEndTime = time.monotonic()
         self.totalPauseDuration += int(pauseEndTime - self.pauseStartTime)
         self.pauseStartTime = None
