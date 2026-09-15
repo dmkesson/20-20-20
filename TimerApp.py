@@ -51,16 +51,18 @@ class Gui():
         buttonsFrame.pack()
 
     def set_button1_start(self):
-        self.button1.configure(command=self.start_timer(), text="Start")
+        self.button1.configure(command=self.start_timer, text="Start")
 
     def set_button1_pause(self):
-        self.button1.configure(command=self.pause_timer(), text="Pause")
+        self.button1.configure(command=self.pause_timer, text="Pause")
+        print("set_button1_pause ran!")
 
     def set_button1_resume(self):
-        self.button1.configure(command=self.resume_timer(), text="Resume")
+        self.button1.configure(command=self.resume_timer, text="Resume")
+        print("set_button1_resume ran!")
 
     def set_button2_restart(self):
-        self.button2.configure(command=self.restart_timer(), bootstyle="danger")
+        self.button2.configure(command=self.restart_timer, bootstyle="danger")
 
     def set_button2_none(self):
         self.button2.configure(command=None, bootstyle="danger ghost")
@@ -96,12 +98,15 @@ class Gui():
         self.meter_tick()
 
     def pause_timer(self):
+        print("pause_timer function ran")
         if not self.timer.isRunning:
             return        
-
         self.root.after_cancel(self.tick_id)
+        print("cancelled tick_id")
         self.timer.pause()
+        print("cancelled timer")
         self.set_button1_resume()
+        print("changed button1 to resume")
         self.set_button2_restart()
 
     def resume_timer(self):
