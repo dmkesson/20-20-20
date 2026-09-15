@@ -71,20 +71,21 @@ class Gui():
     def _build_toggles(self):
         toggle_frame = ttk.Frame(self.root, padding=10)
 
-        auto_toggle_frame = ttk.Frame(toggle_frame, padx=10)
-        self.auto_toggle = ttk.Checkbutton(auto_toggle_frame, bootstyle="square toggle", variable=self.auto_mode, command=self.on_toggle)
+        auto_toggle_frame = ttk.Frame(toggle_frame)
+        self.auto_toggle = ttk.Checkbutton(auto_toggle_frame, bootstyle="square toggle", variable=self.auto_mode, command=self.on_auto_toggle)
         self.auto_toggle.pack()
         self.auto_label = ttk.Label(auto_toggle_frame, text="Auto continue", bootstyle="secondary")
         self.auto_label.pack()
-        auto_toggle_frame.pack(side="left")
+        auto_toggle_frame.pack(side="left", padx=15, anchor="center")
 
-        systray_toggle_frame = ttk.Frame(toggle_frame, padx=10)
-        self.systray_toggle = ttk.Checkbutton(systray_toggle_frame, bootstyle="square toggle", variable=self.systray_mode)
+        systray_toggle_frame = ttk.Frame(toggle_frame)
+        self.systray_toggle = ttk.Checkbutton(systray_toggle_frame, bootstyle="square toggle", variable=self.systray_mode, command=self.on_systray_toggle)
         self.systray_toggle.pack()
         self.systray_label = ttk.Label(systray_toggle_frame, text="Minimize on close", bootstyle="secondary")
         self.systray_label.pack()
+        systray_toggle_frame.pack(side="right", anchor="center")
 
-        toggle_frame.pack()
+        toggle_frame.pack(anchor="center")
 
     def on_auto_toggle(self):
         if not self.auto_mode.get():
