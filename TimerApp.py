@@ -24,28 +24,35 @@ class Gui():
         self.root.geometry("400x600")
 
         # Widgets
-        self.statusLabel = ttk.Label(self.root, textvariable = self.currPhase.name)
+        self.statusLabel = ttk.Label(self.root, textvariable = self.timer.currPhase.name)
         self.statusLabel.pack()
         
-        self._build_meter()
+        self._init_meter()
 
-        self.startButton = ttk.Button(self.root, command = self.start_timer, textvariable="Start")
-        self.startButton.pack()
+        # acts as the start, pause, and resume button
+        self.buttonText1 = "Start"#
+        self.buttonText2 = "Reset"
+        self._init_button()
 
-    def _build_meter(self):
+    def _init_meter(self):
         self.meter = ttk.Meter(self.root, padding = 20)
         self.meter.pack()
-        self.meter.amounttotalvar.set(self.currPhase.duration)
-        self.elapsed = 0
-        self.remaining = self.currPhase.duration
-        self.set_meter()
+        self.meter.amounttotalvar.set(self.timer.currPhase.duration)
+        self.set_meter_non_timer("Begin!")
+
+    def _init_buttons(self):
+        # acts as the start, pause, and resume button
+        self.button1 = ttk.Button(self.root, command = self.start_timer, textvar=self.buttonText1)
+        self.button.pack()
+
+        self.button2 = ttk.Button(self.root, command = None, textvar = self.buttonText2)
+
 
     def meter_tick(self):
-        elapsed = int(time.monotonic() - self.phaseStart)
-        self.remaining = self.currPhase.duration - self.elapsed
-    
-        if self.remaining <= 0:
-            self.switch_phase()
+        if self.timer.is_phase_over():
+            self.set_meter_non_timer()
+            self.timer.step_phase()
+            #here i need a method to wait for user input to start the next phase
 
         self.set_meter()
         self.tick_id = self.root.after(1000, self.meter_tick)
@@ -53,20 +60,11 @@ class Gui():
     def set_meter(self):
         self.meter.amountusedvar.set(self.timer.elapsed())
         self.meter.amountuseddisplayvar.set(format_seconds(self.timer.remaining()))
+        self.meter.configure(bootstyle=self.timer.currPhase.colour)
 
-    def switch_phase(self):
-        if self.timer.currPhase is self.work:
-            self.currPhase = self.eyeRest
-            self.meter.amounttotalvar.set(self.currPhase.duration)
-            self.elapsed = 0
-            self.remaining = self.currPhase.duration
-            self.set_meter()
-        else:
-            self.currPhase = self.work
-            self.meter.amounttotalvar.set(self.currPhase.duration)
-            self.elapsed = 0
-            self.remaining = self.currPhase.duration
-            self.set_meter()
+    def set_meter_non_timer(self, string):
+        self.meter.configure(bootstyle="secondary", amountused=1, amounttotal=1)
+        self.meter.amountuseddisplayvar.set(string)
 
     def set_button(self):
         if self.timer.isRunning:
@@ -78,7 +76,8 @@ class Gui():
         if self.tick_id is not None:
             self.root.after_cancel(self.tick_id)
             
-        self.timer.start_Phase()
+        self.meter.amounttotalvar.set(self.timer.currPhase.duration)
+        self.timer.start()
         self.meter_tick()
 
     def run(self):
@@ -90,7 +89,7 @@ class Timer():
         self.phases = phases
         self.currPhase = phases[0]
 
-        self.phaseStartTime = None
+        self.phaseStartTime = 0
         self.pauseStartTime = None
         self.totalPauseDuration = 0
 
@@ -112,7 +111,6 @@ class Timer():
 
     def step_phase(self):
         self.currPhase = self.phases[(self.phases.index(self.currPhase) + 1) % len(self.phases)]
-        self.totalPauseDuration = 0
 
     def pause(self):
         self.pauseStartTime = time.monotonic()
