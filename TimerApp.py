@@ -62,10 +62,10 @@ class Gui():
         print("set_button1_resume ran!")
 
     def set_button2_restart(self):
-        self.button2.configure(command=self.restart_timer, bootstyle="danger")
+        self.button2.configure(command=self.reset_timer, bootstyle="danger")
 
     def set_button2_none(self):
-        self.button2.configure(command=None, bootstyle="danger ghost")
+        self.button2.configure(command=None, bootstyle="secondary")
 
     def meter_tick(self):
         if self.timer.is_phase_over():
@@ -85,7 +85,7 @@ class Gui():
     def set_meter_non_timer(self, string):
         self.meter.configure(bootstyle="secondary", amountused=1, amounttotal=1)
         self.meter.amountuseddisplayvar.set(string)
-            
+    
     def start_timer(self):
         if self.tick_id is not None:
             self.root.after_cancel(self.tick_id)
@@ -102,6 +102,7 @@ class Gui():
         if not self.timer.isRunning:
             return        
         self.root.after_cancel(self.tick_id)
+        self.tick_id = None
         print("cancelled tick_id")
         self.timer.pause()
         print("cancelled timer")
@@ -124,6 +125,7 @@ class Gui():
         self.timer.reset()
         self.set_button1_start()
         self.setbutton2_none()
+
     def run(self):
         self.root.mainloop()
 
@@ -166,6 +168,12 @@ class Timer():
         self.pauseStartTime = None
         self.isRunnning = True
 
+    def reset(self):
+        self.phaseStartTime = 0
+        self.pauseStartTime = None
+        self.totalPauseDuration = 0
+        self.currPhase = self.phases[0]
+        self.isRunning = False
 
 def format_seconds(s):
     (mm,ss) = divmod(s, 60)
