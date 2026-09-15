@@ -21,7 +21,7 @@ class Gui():
     
         # Window Properties
         self.root.title("20-20-20 Timer")
-        self.root.geometry("400x600")
+        self.root.geometry("400x350")
 
         # Widgets
         self.statusLabel = ttk.Label(self.root, textvariable=self.timer.currPhase.name)
@@ -42,10 +42,10 @@ class Gui():
         buttonsFrame = ttk.Frame(self.root, padding=10)
 
         # acts as the start, pause, and resume button
-        self.button1 = ttk.Button(buttonsFrame, command=self.start_timer, text="Start", bootstyle="success")
+        self.button1 = ttk.Button(buttonsFrame, command=self.start_timer, text="Start", bootstyle="success", width=10)
         self.button1.pack(side="left", padx=10)
         # acts as the reset button
-        self.button2 = ttk.Button(buttonsFrame, command=None, text="Reset", bootstyle="secondary")
+        self.button2 = ttk.Button(buttonsFrame, command=None, text="Reset", bootstyle="secondary", width = 10)
         self.button2.pack(side="right", padx=10)
 
         buttonsFrame.pack()
