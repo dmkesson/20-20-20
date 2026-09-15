@@ -45,13 +45,16 @@ class Gui():
         self.button1 = ttk.Button(buttonsFrame, command=self.start_timer, text="Start", bootstyle="success")
         self.button1.pack(side="left", padx=10)
         # acts as the reset button
-        self.button2 = ttk.Button(buttonsFrame, command=None, text="Reset", bootstyle="danger ghost")
+        self.button2 = ttk.Button(buttonsFrame, command=None, text="Reset", bootstyle="secondary")
         self.button2.pack(side="right", padx=10)
 
         buttonsFrame.pack()
 
     def set_button1_start(self):
         self.button1.configure(command=self.start_timer, text="Start")
+
+    def set_button1_continue(self):
+        self.button1.configure(command=self.start_timer, text="Continue")
 
     def set_button1_pause(self):
         self.button1.configure(command=self.pause_timer, text="Pause")
@@ -69,9 +72,9 @@ class Gui():
 
     def meter_tick(self):
         if self.timer.is_phase_over():
-            self.set_meter_non_timer()
+            self.set_meter_non_timer("Complete!")
             self.timer.step_phase()
-            self.set_button1_start()
+            self.set_button1_continue()
             return
 
         self.set_meter()
@@ -117,14 +120,19 @@ class Gui():
         self.set_button1_pause()
         self.set_button2_none()
         self.timer.resume()
-        self.meter_tick() 
+        self.meter_tick()
+        print(self.timer.isRunning)
 
     def reset_timer(self):
         if self.timer.isRunning:
             return
+        if self.tick_id is not None:
+            self.root.after_cancel(self.tick_id)
+            self.tick_id = None
         self.timer.reset()
         self.set_button1_start()
-        self.setbutton2_none()
+        self.set_button2_none()
+        self.set_meter_non_timer("Begin!")
 
     def run(self):
         self.root.mainloop()
@@ -157,6 +165,7 @@ class Timer():
 
     def step_phase(self):
         self.currPhase = self.phases[(self.phases.index(self.currPhase) + 1) % len(self.phases)]
+        self.isRunning = False
 
     def pause(self):
         self.pauseStartTime = time.monotonic()
@@ -166,7 +175,7 @@ class Timer():
         pauseEndTime = time.monotonic()
         self.totalPauseDuration += int(pauseEndTime - self.pauseStartTime)
         self.pauseStartTime = None
-        self.isRunnning = True
+        self.isRunning = True
 
     def reset(self):
         self.phaseStartTime = 0
