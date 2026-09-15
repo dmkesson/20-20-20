@@ -15,7 +15,8 @@ class Gui():
         self.root = ttk.Window()
 
         self.tick_id = None
-        self.auto_mode = False
+        # used when auto mode triggers next phase
+        self.auto_tick_id = None
 
         self.work = Phases("Work", 5, "primary")
         self.eyeRest = Phases("Eye Rest", 20, "success")
@@ -23,7 +24,7 @@ class Gui():
     
         # Window Properties
         self.root.title("20-20-20 Timer")
-        self.root.geometry("400x330")
+        self.root.geometry("400x325")
         
         self._build_meter()
         self._build_buttons()
@@ -45,15 +46,6 @@ class Gui():
         self.button2.pack(side="right", padx=10)
         buttonsFrame.pack()
 
-    def _build_auto_toggle(self):
-        auto_toggle_frame = ttk.Frame(self.root, padding=10)
-        self.auto_toggle = ttk.Checkbutton(auto_toggle_frame, bootstyle="square toggle")
-        self.auto_toggle.pack(pady=2)
-        self.auto_label = ttk.Label(auto_toggle_frame, text="Auto continue: off", bootstyle="secondary")
-        self.auto_label.pack()
-
-        auto_toggle_frame.pack()
-
     def set_button1_start(self):
         self.button1.configure(command=self.start_timer, text="Start")
 
@@ -74,11 +66,28 @@ class Gui():
     def set_button2_none(self):
         self.button2.configure(command=None, bootstyle="secondary")
 
+    def _build_auto_toggle(self):
+        auto_toggle_frame = ttk.Frame(self.root, padding=10)
+        self.auto_mode = ttk.BooleanVar()
+        self.auto_toggle = ttk.Checkbutton(auto_toggle_frame, bootstyle="square toggle", variable=self.auto_mode, command=self.on_toggle)
+        self.auto_toggle.pack()
+        self.auto_label = ttk.Label(auto_toggle_frame, text="Auto continue", bootstyle="secondary")
+        self.auto_label.pack()
+        auto_toggle_frame.pack()
+
+    def on_toggle(self):
+        if not self.auto_mode.get():
+            if self.auto_tick_id is not None:
+                self.root.after_cancel(self.auto_tick_id)
+                self.auto_tick_id = None
+
     def meter_tick(self):
         if self.timer.is_phase_over():
             playsound("sounds/notification.wav", block=False)
-            self.set_meter_non_timer("Complete!")
             self.timer.step_phase()
+            if self.auto_mode.get():
+                self.auto_tick_id = self.root.after(5000, self.start_timer)
+            self.set_meter_non_timer("Complete!")
             self.set_button1_continue()
             self.set_button2_restart()
             return
@@ -136,6 +145,9 @@ class Gui():
         if self.tick_id is not None:
             self.root.after_cancel(self.tick_id)
             self.tick_id = None
+        if self.auto_tick_id is not None:
+            self.root.after_cancel(self.auto_tick_id)
+            self.auto_tick_id = None
         self.timer.reset()
         self.set_button1_start()
         self.set_button2_none()
@@ -195,6 +207,9 @@ def format_seconds(s):
     (mm,ss) = divmod(s, 60)
     return f"{mm}:{ss:02d}"
 
-if __name__ == "__main__":
+def main():
     myObject = Gui()
     myObject.run()
+
+if __name__ == "__main__":
+    main()
