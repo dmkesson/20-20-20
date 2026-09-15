@@ -30,8 +30,6 @@ class Gui():
         self._build_meter()
 
         # acts as the start, pause, and resume button
-        self.button1Text = "Start"#
-        self.button2Text = "Reset"
         self._build_buttons()
 
     def _build_meter(self):
@@ -44,28 +42,25 @@ class Gui():
         buttonsFrame = ttk.Frame(self.root, padding=10)
 
         # acts as the start, pause, and resume button
-        self.button1 = ttk.Button(buttonsFrame, command=self.start_timer, textvar=self.button1Text, bootstyle="success")
+        self.button1 = ttk.Button(buttonsFrame, command=self.start_timer, text="Start", bootstyle="success")
         self.button1.pack(side="left", padx=10)
         # acts as the reset button
-        self.button2 = ttk.Button(buttonsFrame, command=None, textvar=self.button2Text, bootstyle="danger ghost")
+        self.button2 = ttk.Button(buttonsFrame, command=None, text="Reset", bootstyle="danger ghost")
         self.button2.pack(side="right", padx=10)
 
         buttonsFrame.pack()
 
     def set_button1_start(self):
-        self.button1Text = "Start"
-        self.button1.configure(command=self.start_timer())
+        self.button1.configure(command=self.start_timer(), text="Start")
 
     def set_button1_pause(self):
-        self.button1Text = "Pause"
-        self.button1.configure(command=self.pause_timer())
+        self.button1.configure(command=self.pause_timer(), text="Pause")
 
     def set_button1_resume(self):
-        self.button1Text = "Resume"
-        self.button1.configure(command=self.resume_timer())
+        self.button1.configure(command=self.resume_timer(), text="Resume")
 
     def set_button2_restart(self):
-        self.button2.configure(command=self.start_timer(), bootstyle="danger")
+        self.button2.configure(command=self.restart_timer(), bootstyle="danger")
 
     def set_button2_none(self):
         self.button2.configure(command=None, bootstyle="danger ghost")
@@ -92,11 +87,31 @@ class Gui():
     def start_timer(self):
         if self.tick_id is not None:
             self.root.after_cancel(self.tick_id)
-            
+        if self.timer.isRunning:
+            return
+        
         self.meter.amounttotalvar.set(self.timer.currPhase.duration)
         self.set_button1_pause()
         self.timer.start()
         self.meter_tick()
+
+    def pause_timer(self):
+        if not self.timer.isRunning:
+            return        
+
+        self.root.after_cancel(self.tick_id)
+        self.timer.pause()
+        self.set_button1_resume()
+        self.set_button2_restart()
+
+    def resume_timer(self):
+        if self.timer.isRunning:
+            return
+
+        self.set_button1_pause()
+        self.set_button2_none()
+        self.timer.resume()
+        self.meter_tick() 
 
     def run(self):
         self.root.mainloop()
