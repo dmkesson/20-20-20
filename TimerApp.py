@@ -121,6 +121,10 @@ class Gui():
     def start_timer(self):
         if self.tick_id is not None:
             self.root.after_cancel(self.tick_id)
+            self.tick_id = None
+        if self.auto_tick_id is not None:
+            self.root.after_cancel(self.auto_tick_id)
+            self.auto_tick_id = None
         if self.timer.is_running:
             return
         
