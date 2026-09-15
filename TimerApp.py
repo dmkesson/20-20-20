@@ -2,6 +2,7 @@ import tkinter as tk
 import ttkbootstrap as ttk
 import time
 from dataclasses import dataclass
+from playsound3 import playsound
 
 @dataclass
 class Phases:
@@ -15,21 +16,16 @@ class Gui():
 
         self.tick_id = None
 
-        self.work = Phases("Work", 1200, "primary")
+        self.work = Phases("Work", 5, "primary")
         self.eyeRest = Phases("Eye Rest", 20, "success")
         self.timer = Timer([self.work, self.eyeRest])
     
         # Window Properties
         self.root.title("20-20-20 Timer")
         self.root.geometry("400x350")
-
-        # Widgets
-        self.statusLabel = ttk.Label(self.root, textvariable=self.timer.currPhase.name)
-        self.statusLabel.pack()
         
         self._build_meter()
 
-        # acts as the start, pause, and resume button
         self._build_buttons()
 
     def _build_meter(self):
@@ -72,16 +68,18 @@ class Gui():
 
     def meter_tick(self):
         if self.timer.is_phase_over():
+            playsound("sounds/notification.wav", block=False)
             self.set_meter_non_timer("Complete!")
             self.timer.step_phase()
             self.set_button1_continue()
+            self.set_button2_restart()
             return
 
         self.set_meter()
         self.tick_id = self.root.after(1000, self.meter_tick)
 
     def set_meter(self):
-        self.meter.configure(bootstyle=self.timer.currPhase.colour)
+        self.meter.configure(bootstyle=self.timer.currPhase.colour, subtext=self.timer.currPhase.name)
         self.meter.amountusedvar.set(self.timer.elapsed())
         self.meter.amountuseddisplayvar.set(format_seconds(self.timer.remaining()))
 
@@ -97,6 +95,7 @@ class Gui():
         
         self.meter.amounttotalvar.set(self.timer.currPhase.duration)
         self.set_button1_pause()
+        self.set_button2_none()
         self.timer.start()
         self.meter_tick()
 
