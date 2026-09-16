@@ -3,7 +3,7 @@ from time import sleep
 
 phase1 = Phases("1", 1, "abc")
 phase2 = Phases("2", 5, "xyz")
-#phase3 = Phases("3", 2, "hij")
+phase3 = Phases("3", 3, "hij")
 
 def test_format_seconds():
     assert format_seconds(187) == "3:07"
@@ -85,3 +85,13 @@ def test_reset():
     myTimer.reset()
     assert myTimer.curr_phase.duration == 1
     assert not myTimer.is_running
+
+def test_elapsed_fraction():
+    myTimer = Timer([phase2, phase3])
+    myTimer.start()
+    sleep(1)
+    assert myTimer.elapsed_fraction() == 0.2
+    myTimer.step_phase()
+    myTimer.start()
+    sleep(1)
+    assert myTimer.elapsed_fraction() == 0.33

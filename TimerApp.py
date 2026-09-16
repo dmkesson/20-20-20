@@ -190,6 +190,9 @@ class Timer():
     def elapsed(self):
         return int(time.monotonic() - self.phase_start_time) - self.total_pause_duration
 
+    def elapsed_fraction(self):
+        return round((self.elapsed() / self.curr_phase.duration), 2)
+
     def remaining(self):
         return self.curr_phase.duration - self.elapsed()
 
