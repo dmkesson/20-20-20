@@ -1,12 +1,18 @@
 import tkinter as tk
 import ttkbootstrap as ttk
-import pystray
-from PIL import Image, ImageDraw
-from queue import Queue
 import time
 from dataclasses import dataclass
 from playsound3 import playsound
 
+try:
+    import pystray
+    SYSTRAY = True
+except ImportError:
+    SYSTRAY = False
+else:
+    from threading import Thread
+    from PIL import Image, ImageDraw
+    from queue import Queue
 
 @dataclass
 class Phases:
@@ -20,9 +26,9 @@ class Gui():
 
         self.tick_id = None
         # used when auto mode triggers next phase
+        self.user_auto_mode = False
         self.auto_tick_id = None
         self.system_auto_mode = ttk.BooleanVar()
-        self.user_auto_mode = False
         self.systray_mode = ttk.BooleanVar()
 
         self.work = Phases("Work", 5, "primary")
@@ -30,13 +36,17 @@ class Gui():
 
         self.timer = Timer([self.work, self.eye_rest])
     
-        # Window Properties
         self.root.title("20-20-20 Timer")
         self.root.geometry("400x325")
         
         self._build_meter()
         self._build_buttons()
         self._build_toggles()
+
+        if SYSTRAY:
+            self.tray = Tray(self.timer)
+            self.systray_queue = Queue()
+            self.tray.start_thread()
 
     def _build_meter(self):
         self.meter = ttk.Meter(self.root, padding=10)
@@ -84,12 +94,13 @@ class Gui():
         self.auto_label.pack()
         auto_toggle_frame.pack(side="left", padx=15, anchor="center")
 
-        systray_toggle_frame = ttk.Frame(toggle_frame)
-        self.systray_toggle = ttk.Checkbutton(systray_toggle_frame, bootstyle="square toggle", variable=self.systray_mode, command=self.on_systray_toggle)
-        self.systray_toggle.pack()
-        self.systray_label = ttk.Label(systray_toggle_frame, text="Minimize on close", bootstyle="secondary")
-        self.systray_label.pack()
-        systray_toggle_frame.pack(side="right", anchor="center")
+        if SYSTRAY:
+            systray_toggle_frame = ttk.Frame(toggle_frame)
+            self.systray_toggle = ttk.Checkbutton(systray_toggle_frame, bootstyle="square toggle", variable=self.systray_mode, command=self.on_systray_toggle)
+            self.systray_toggle.pack()
+            self.systray_label = ttk.Label(systray_toggle_frame, text="Minimize on close", bootstyle="secondary")
+            self.systray_label.pack()
+            systray_toggle_frame.pack(side="right", anchor="center")
 
         toggle_frame.pack(anchor="center")
 
@@ -193,14 +204,18 @@ class Gui():
 class Tray():
     def __init__(self, timer):
         self.timer = timer
+        self.icon = pystray.Icon("20-20-20 Timer", icon=self.draw_pie(16, "blue"))
 
-    def draw_pie(self, dimension):#
-        image = Image.new("RGB", (dimension, dimension), "blue")
+    def draw_pie(self, dimension, colour):#
+        image = Image.new("RGBA", (dimension, dimension), "white")
         draw = ImageDraw.Draw(image)
-        draw.pieslice([0, 0, dimension, dimension], 90, self.format_progress_angle()) 
+        draw.pieslice([2, 2, 13, 13], 90, self._end_angle(), fill=colour, outline=colour)
         return image
 
-    def format_progress_angle(self):
+    def start_thread(self):
+        Thread(target=lambda: self.icon.run(), daemon=True).start()
+
+    def _end_angle(self):
         return self.timer.elapsed_fraction() * 360 + 90
 
 class Timer():
