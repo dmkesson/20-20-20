@@ -1,8 +1,12 @@
 import tkinter as tk
 import ttkbootstrap as ttk
+import pystray
+from PIL import Image, ImageDraw
+from queue import Queue
 import time
 from dataclasses import dataclass
 from playsound3 import playsound
+
 
 @dataclass
 class Phases:
@@ -185,6 +189,19 @@ class Gui():
 
     def run(self):
         self.root.mainloop()
+
+class Tray():
+    def __init__(self, timer):
+        self.timer = timer
+
+    def draw_pie(self, dimension):#
+        image = Image.new("RGB", (dimension, dimension), "blue")
+        draw = ImageDraw.Draw(image)
+        draw.pieslice([0, 0, dimension, dimension], 90, self.format_progress_angle()) 
+        return image
+
+    def format_progress_angle(self):
+        return self.timer.elapsed_fraction() * 360 + 90
 
 class Timer():
     def __init__(self, phases):
