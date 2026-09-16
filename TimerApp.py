@@ -17,11 +17,13 @@ class Gui():
         self.tick_id = None
         # used when auto mode triggers next phase
         self.auto_tick_id = None
-        self.auto_mode = ttk.BooleanVar()
+        self.system_auto_mode = ttk.BooleanVar()
+        self.user_auto_mode = False
         self.systray_mode = ttk.BooleanVar()
 
         self.work = Phases("Work", 5, "primary")
-        self.eye_rest = Phases("Eye Rest", 20, "success")
+        self.eye_rest = Phases("Eye Rest", 4, "success")
+
         self.timer = Timer([self.work, self.eye_rest])
     
         # Window Properties
@@ -72,7 +74,7 @@ class Gui():
         toggle_frame = ttk.Frame(self.root, padding=10)
 
         auto_toggle_frame = ttk.Frame(toggle_frame)
-        self.auto_toggle = ttk.Checkbutton(auto_toggle_frame, bootstyle="square toggle", variable=self.auto_mode, command=self.on_auto_toggle)
+        self.auto_toggle = ttk.Checkbutton(auto_toggle_frame, bootstyle="square toggle", variable=self.system_auto_mode, command=self.on_auto_toggle)
         self.auto_toggle.pack()
         self.auto_label = ttk.Label(auto_toggle_frame, text="Auto continue", bootstyle="secondary")
         self.auto_label.pack()
@@ -88,19 +90,28 @@ class Gui():
         toggle_frame.pack(anchor="center")
 
     def on_auto_toggle(self):
-        if not self.auto_mode.get():
+        if not self.system_auto_mode.get():
             if self.auto_tick_id is not None:
                 self.root.after_cancel(self.auto_tick_id)
                 self.auto_tick_id = None
+            self.user_auto_mode = False
+        else:
+            self.user_auto_mode = True
 
     def on_systray_toggle(self):
-        ...
+        #need to turn on auto mode, grey out auto mode toggle, and remember previous user preferece
+        if self.systray_mode.get():
+            self.system_auto_mode.set(True)
+            self.auto_toggle.state(["disabled"])
+        else:
+            self.auto_toggle.state(["!disabled"])
+            self.system_auto_mode.set(self.user_auto_mode)
 
     def meter_tick(self):
         if self.timer.is_phase_over():
             playsound("sounds/notification.wav", block=False)
             self.timer.step_phase()
-            if self.auto_mode.get():
+            if self.system_auto_mode.get():
                 self.auto_tick_id = self.root.after(5000, self.start_timer)
             self._set_meter_non_timer("Complete!")
             self._set_button1_continue()
