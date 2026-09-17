@@ -53,7 +53,7 @@ class Gui():
         self.system_auto_mode = ttk.BooleanVar()
         self.systray_mode = ttk.BooleanVar()
 
-        self.work = Phases("Work", 1200, "primary")
+        self.work = Phases("Work", 10, "primary")
         self.eye_rest = Phases("Eye Rest", 20, "success")
 
         self.timer = Timer([self.work, self.eye_rest])
@@ -149,6 +149,9 @@ class Gui():
             self.auto_toggle.state(["disabled"])
             self.root.protocol("WM_DELETE_WINDOW", self.root.withdraw)
         else:
+            if self.auto_tick_id is not None:
+                self.root.after_cancel(self.auto_tick_id)
+                self.auto_tick_id = None
             self.auto_toggle.state(["!disabled"])
             self.system_auto_mode.set(self.user_auto_mode)
             self.root.protocol("WM_DELETE_WINDOW", self.root.destroy)
