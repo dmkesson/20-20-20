@@ -4,3 +4,6 @@ __pycache__/
 conftest.py
 .vscode/
 .pytest_cache/
+build/
+dist/
+20-20-20.spec

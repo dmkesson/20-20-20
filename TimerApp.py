@@ -53,7 +53,7 @@ class Gui():
         self.system_auto_mode = ttk.BooleanVar()
         self.systray_mode = ttk.BooleanVar()
 
-        self.work = Phases("Work", 10, "primary")
+        self.work = Phases("Work", 1200, "primary")
         self.eye_rest = Phases("Eye Rest", 20, "success")
 
         self.timer = Timer([self.work, self.eye_rest])
@@ -340,7 +340,7 @@ class Timer():
         return int(time.monotonic() - self.phase_start_time) - self.total_pause_duration
 
     def elapsed_fraction(self):
-        return round((self.elapsed() / self.curr_phase.duration), 2)
+        return round((self.elapsed() / self.curr_phase.duration), 3)
 
     def remaining(self):
         return self.curr_phase.duration - self.elapsed()
