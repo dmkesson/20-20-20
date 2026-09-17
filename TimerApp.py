@@ -47,6 +47,7 @@ class Gui():
             self.systray_queue = Queue() # for callbacks from the tray icon
             self.tray = Tray(self.systray_queue, self.timer)
             self.tray.start_thread()
+            self.poll_tray()
 
     def _build_meter(self):
         self.meter = ttk.Meter(self.root, padding=10)
@@ -124,6 +125,17 @@ class Gui():
             self.system_auto_mode.set(self.user_auto_mode)
             self.root.protocol("WM_DELETE_WINDOW", self.root.destroy)
 
+    def poll_tray(self):
+        while self.systray_queue.qsize() > 0:
+            flag = self.systray_queue.get()
+            if flag == "open":
+                self.root.deiconify()
+            elif flag == "quit":
+                self.tray.quit_icon()
+                self.root.destroy()
+
+        self.root.after(100, self.poll_tray)
+        
     def meter_tick(self):
         if self.timer.is_phase_over():
             playsound("sounds/notification.wav", block=False)
@@ -148,7 +160,7 @@ class Gui():
         self.meter.amountuseddisplayvar.set(format_seconds(self.timer.remaining()))
 
     def _set_meter_non_timer(self, string):
-        self.meter.configure(bootstyle="secondary", amountused=1, amounttotal=1, subtext=self.timer.curr_phase.name)
+        self.meter.configure(bootstyle="secondary", amountused=1, amounttotal=1, subtext=f"Next - {self.timer.curr_phase.name}")
         self.meter.amountuseddisplayvar.set(string)
 
     def _update_systray_icon(self):
