@@ -2,6 +2,7 @@ import tkinter as tk
 import ttkbootstrap as ttk
 import time
 from dataclasses import dataclass
+from enum import Enum, auto
 from playsound3 import playsound
 
 try:
@@ -19,6 +20,11 @@ class Phases:
     name: str
     duration: int
     colour: str
+
+class Mode(Enum):
+    IDLE = auto()
+    RUNNING = auto()
+    PAUSED = auto()
 
 class Gui():
     def __init__(self):
@@ -226,7 +232,7 @@ class Tray():
     def __init__(self, queue, timer):
         self.queue = queue
         self.timer = timer
-        self.menus = {"idle":
+        self.menus = {Mode.IDLE:
                         pystray.Menu(
                         pystray.MenuItem("20-20-20 Timer", self._on_open),
                         pystray.Menu.SEPARATOR,
@@ -235,7 +241,7 @@ class Tray():
                         pystray.Menu.SEPARATOR,
                         pystray.MenuItem("Quit", self._on_quit)
                         ),
-                    "running":
+                    Mode.RUNNING:
                         pystray.Menu(
                         pystray.MenuItem("20-20-20 Timer", self._on_open),
                         pystray.Menu.SEPARATOR,
@@ -244,7 +250,7 @@ class Tray():
                         pystray.Menu.SEPARATOR,
                         pystray.MenuItem("Quit", self._on_quit)
                         ),
-                    "paused":  
+                    Mode.PAUSED:
                         pystray.Menu(
                         pystray.MenuItem("20-20-20 Timer", self._on_open),
                         pystray.Menu.SEPARATOR,
