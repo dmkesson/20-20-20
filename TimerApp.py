@@ -1,11 +1,12 @@
+import sys
 import tkinter as tk
 import ttkbootstrap as ttk
 from ttkbootstrap.widgets import ToolTip
 import time
 from dataclasses import dataclass
 from enum import Enum, auto
+from pathlib import Path
 from playsound3 import playsound
-
 try:
     import pystray
     SYSTRAY = True
@@ -15,6 +16,13 @@ else:
     from threading import Thread
     from PIL import Image, ImageDraw
     from queue import Queue
+
+if getattr(sys, "frozen", False):
+    BASE_DIR = (Path.sys._MEIPASS)
+else:
+    BASE_DIR = Path(__file__).parent
+
+NOTIF_PATH = BASE_DIR/"sounds"/"notification.wav"
 
 @dataclass
 class Phases:
@@ -152,7 +160,7 @@ class Gui():
         
     def meter_tick(self):
         if self.timer.is_phase_over():
-            playsound("sounds/notification.wav", block=False)
+            playsound(NOTIF_PATH, block=False)
             self.timer.step_phase()
             if self.system_auto_mode.get():
                 self.auto_tick_id = self.root.after(5000, self.start_timer)
@@ -207,7 +215,8 @@ class Gui():
         self.timer.pause()
         self._set_button1_resume()
         self._set_button2_restart()
-        self.tray.menu_change(Mode.PAUSED)
+        if SYSTRAY:
+            self.tray.menu_change(Mode.PAUSED)
 
     def resume_timer(self):
         if self.timer.mode is Mode.RUNNING:
