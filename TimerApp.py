@@ -226,31 +226,46 @@ class Tray():
     def __init__(self, queue, timer):
         self.queue = queue
         self.timer = timer
-        self.start_menu = pystray.Menu(
-            pystray.MenuItem("20-20-20 Timer", self._open_on_clicked),
+        self.idle_menu = pystray.Menu(
+            pystray.MenuItem("20-20-20 Timer", self._on_open),
             pystray.Menu.SEPARATOR,
-            pystray.MenuItem("Resume", self._resume_on_clicked, enabled=False),
-            pystray.MenuItem("Pause", self._pause_on_clicked, enabled=False),
+            pystray.MenuItem("Resume", self._on_resume, enabled=False),
+            pystray.MenuItem("Pause", self._on_pause, enabled=False),
             pystray.Menu.SEPARATOR,
-            pystray.MenuItem("Quit", self._quit_on_clicked)
+            pystray.MenuItem("Quit", self._on_quit)
             )
+        self.running_menu = pystray.Menu(
+            pystray.MenuItem("20-20-20 Timer", self._on_open),
+            pystray.Menu.SEPARATOR,
+            pystray.MenuItem("Resume", self._on_resume, enabled=False),
+            pystray.MenuItem("Pause", self._on_pause, enabled=True),
+            pystray.Menu.SEPARATOR,
+            pystray.MenuItem("Quit", self._on_quit)
+        )
+        self.paused_menu = pystray.Menu(
+            pystray.MenuItem("20-20-20 Timer", self._on_open),
+            pystray.Menu.SEPARATOR,
+            pystray.MenuItem("Resume", self._on_resume, enabled=True),
+            pystray.MenuItem("Pause", self._on_pause, enabled=False),
+            pystray.Menu.SEPARATOR,
+            pystray.MenuItem("Quit", self._on_quit)
+        )
 
-        self.icon = pystray.Icon("20-20-20 Timer", icon=self.draw_arc(16, "blue", self._end_angle()), menu=self.start_menu)
+        self.icon = pystray.Icon("20-20-20 Timer", icon=self.draw_arc(16, "blue", self._end_angle()), menu=self.idle_menu)
         
-    def dummy(self):
+    def _dummy(self):
         pass
 
-    def _open_on_clicked(self):
-        print("open queued!")
+    def _on_open(self):
         self.queue.put("open")
 
-    def _resume_on_clicked(self):
+    def _on_resume(self):
         self.queue.put("continue")
 
-    def _pause_on_clicked(self):
+    def _on_pause(self):
         self.queue.put("pause")
 
-    def _quit_on_clicked(self):
+    def _on_quit(self):
         self.queue.put("quit")
 
     def draw_arc(self, dimension, colour, angle):#
@@ -265,6 +280,9 @@ class Tray():
     def update_icon(self):
         print("updating icon!")
         self.icon.icon = self.draw_arc(16, "blue", self._end_angle())
+
+    def change_menu(self):
+        pass
 
     def start_thread(self):
         Thread(target=lambda: self.icon.run(), daemon=True).start()
