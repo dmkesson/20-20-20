@@ -1,10 +1,19 @@
 # 20-20-20
 A simple timer for the 20-20-20 rule. It has two phases: a 20 minute work period (for looking at your computer), and a 20 second eye rest period where you should focus on something >20 metres away. This helps to reduce myopic development (especially when your degree revolves around computers 😅). Uses Tkinter and pystray.
 
- - Auto mode toggle sets timer to run continue to next phase without user input
- - Tray icon shows progress through the phase
- - Window can be closed completely to leave the app running in the tray, removing clutter from your desktop while you are working/studying (locks auto mode on).
- - Notification sound lets you know when its time for a break
+ ---
+ 
+ <p align="center">
+  <img height="230" alt="Demo of the GUI for the timer" src="https://github.com/user-attachments/assets/3645f592-c535-4e18-b018-600a855cdfdd"/>
+  <img height="230" alt="Demo of the tray icon menu" src="https://github.com/user-attachments/assets/1ad00a4d-0001-44cb-a8b4-6ae306dee465"/>
+</p>
+
+
+
+- Auto mode toggle sets timer to run continue to next phase without user input
+- Tray icon shows progress through the phase
+- Window can be closed completely to leave the app running in the tray, removing clutter from your desktop while you are working/studying (locks auto mode on).
+- Notification sound lets you know when its time for a break
 
 
 
