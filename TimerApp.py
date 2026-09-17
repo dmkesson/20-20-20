@@ -226,30 +226,34 @@ class Tray():
     def __init__(self, queue, timer):
         self.queue = queue
         self.timer = timer
-        self.idle_menu = pystray.Menu(
-            pystray.MenuItem("20-20-20 Timer", self._on_open),
-            pystray.Menu.SEPARATOR,
-            pystray.MenuItem("Resume", self._on_resume, enabled=False),
-            pystray.MenuItem("Pause", self._on_pause, enabled=False),
-            pystray.Menu.SEPARATOR,
-            pystray.MenuItem("Quit", self._on_quit)
-            )
-        self.running_menu = pystray.Menu(
-            pystray.MenuItem("20-20-20 Timer", self._on_open),
-            pystray.Menu.SEPARATOR,
-            pystray.MenuItem("Resume", self._on_resume, enabled=False),
-            pystray.MenuItem("Pause", self._on_pause, enabled=True),
-            pystray.Menu.SEPARATOR,
-            pystray.MenuItem("Quit", self._on_quit)
-        )
-        self.paused_menu = pystray.Menu(
-            pystray.MenuItem("20-20-20 Timer", self._on_open),
-            pystray.Menu.SEPARATOR,
-            pystray.MenuItem("Resume", self._on_resume, enabled=True),
-            pystray.MenuItem("Pause", self._on_pause, enabled=False),
-            pystray.Menu.SEPARATOR,
-            pystray.MenuItem("Quit", self._on_quit)
-        )
+        self.menus = {"idle":
+                        pystray.Menu(
+                        pystray.MenuItem("20-20-20 Timer", self._on_open),
+                        pystray.Menu.SEPARATOR,
+                        pystray.MenuItem("Resume", self._on_resume, enabled=False),
+                        pystray.MenuItem("Pause", self._on_pause, enabled=False),
+                        pystray.Menu.SEPARATOR,
+                        pystray.MenuItem("Quit", self._on_quit)
+                        ),
+                    "running":
+                        pystray.Menu(
+                        pystray.MenuItem("20-20-20 Timer", self._on_open),
+                        pystray.Menu.SEPARATOR,
+                        pystray.MenuItem("Resume", self._on_resume, enabled=False),
+                        pystray.MenuItem("Pause", self._on_pause, enabled=True),
+                        pystray.Menu.SEPARATOR,
+                        pystray.MenuItem("Quit", self._on_quit)
+                        ),
+                    "paused":  
+                        pystray.Menu(
+                        pystray.MenuItem("20-20-20 Timer", self._on_open),
+                        pystray.Menu.SEPARATOR,
+                        pystray.MenuItem("Resume", self._on_resume, enabled=True),
+                        pystray.MenuItem("Pause", self._on_pause, enabled=False),
+                        pystray.Menu.SEPARATOR,
+                        pystray.MenuItem("Quit", self._on_quit)
+                        )
+                    }
 
         self.icon = pystray.Icon("20-20-20 Timer", icon=self.draw_arc(16, "blue", self._end_angle()), menu=self.idle_menu)
         
@@ -281,11 +285,11 @@ class Tray():
         print("updating icon!")
         self.icon.icon = self.draw_arc(16, "blue", self._end_angle())
 
-    def change_menu(self):
-        pass
+    def change_menu(self, mode):
+        self.icon.menu = self.menus[mode]
 
     def start_thread(self):
-        Thread(target=lambda: self.icon.run(), daemon=True).start()
+        Thread(target=self.icon.run, daemon=True).start()
 
     def quit_icon(self):
         self.icon.stop()
