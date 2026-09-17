@@ -18,11 +18,12 @@ else:
     from queue import Queue
 
 if getattr(sys, "frozen", False):
-    BASE_DIR = (Path.sys._MEIPASS)
+    BASE_DIR = Path(sys._MEIPASS)
 else:
     BASE_DIR = Path(__file__).parent
 
 NOTIF_PATH = BASE_DIR/"sounds"/"notification.wav"
+ICON_PATH = BASE_DIR/"images"/"icon.ico"
 
 @dataclass
 class Phases:
@@ -52,13 +53,14 @@ class Gui():
         self.system_auto_mode = ttk.BooleanVar()
         self.systray_mode = ttk.BooleanVar()
 
-        self.work = Phases("Work", 20, "primary")
-        self.eye_rest = Phases("Eye Rest", 4, "success")
+        self.work = Phases("Work", 1200, "primary")
+        self.eye_rest = Phases("Eye Rest", 20, "success")
 
         self.timer = Timer([self.work, self.eye_rest])
     
         self.root.title("20-20-20 Timer")
         self.root.geometry("400x325")
+        self.root.iconbitmap(ICON_PATH)
         
         self._build_meter()
         self._build_buttons()
