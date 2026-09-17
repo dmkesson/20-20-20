@@ -207,19 +207,32 @@ class Tray():
     def __init__(self, queue, timer):
         self.queue = queue
         self.timer = timer
-        self.menu = pystray.Menu(
-            pystray.MenuItem("20-20-20 Timer", self.dummy, enabled=False),
+        self.start_menu = pystray.Menu(
+            pystray.MenuItem("20-20-20 Timer", self._open_on_clicked),
             pystray.Menu.SEPARATOR,
-            pystray.MenuItem("Open App", self._open_on_clicked)
-        )
+            pystray.MenuItem("Resume", self._resume_on_clicked, enabled=False),
+            pystray.MenuItem("Pause", self._pause_on_clicked, enabled=False),
+            pystray.Menu.SEPARATOR,
+            pystray.MenuItem("Quit", self._quit_on_clicked)
+            )
 
         self.icon = pystray.Icon("20-20-20 Timer", icon=self.draw_pie(16, "blue"), menu=self.menu)
         
     def dummy(self):
         pass
 
-    def _open_on_clicked(self, icon, item):
-        self.queue.put()
+    def _open_on_clicked(self):
+        print("open queued!")
+        self.queue.put("open")
+
+    def _resume_on_clicked(self):
+        self.queue.put("continue")
+
+    def _pause_on_clicked(self):
+        self.queue.put("pause")
+
+    def _quit_on_clicked(self):
+        self.queue.put("quit")
 
     def draw_pie(self, dimension, colour):#
         image = Image.new("RGBA", (dimension, dimension), "white")
@@ -232,6 +245,9 @@ class Tray():
 
     def start_thread(self):
         Thread(target=lambda: self.icon.run(), daemon=True).start()
+
+    def quit_icon(self):
+        self.icon.stop()
 
 class Timer():
     def __init__(self, phases):
