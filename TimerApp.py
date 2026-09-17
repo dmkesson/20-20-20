@@ -185,7 +185,7 @@ class Gui():
         if self.auto_tick_id is not None:
             self.root.after_cancel(self.auto_tick_id)
             self.auto_tick_id = None
-        if self.timer.is_running:
+        if self.timer.mode is Mode.RUNNING:
             return
         
         self.meter.amounttotalvar.set(self.timer.curr_phase.duration)
@@ -196,7 +196,7 @@ class Gui():
 
     def pause_timer(self):
         print("pause_timer function ran")
-        if not self.timer.is_running:
+        if self.timer.mode is not Mode.RUNNING:
             return        
         self.root.after_cancel(self.tick_id)
         self.tick_id = None
@@ -208,17 +208,16 @@ class Gui():
         self._set_button2_restart()
 
     def resume_timer(self):
-        if self.timer.is_running:
+        if self.timer.mode is Mode.RUNNING:
             return
 
         self._set_button1_pause()
         self._set_button2_none()
         self.timer.resume()
         self.meter_tick()
-        print(self.timer.is_running)
 
     def reset_timer(self):
-        if self.timer.is_running:
+        if self.timer.mode is Mode.RUNNING:
             return
         if self.tick_id is not None:
             self.root.after_cancel(self.tick_id)
@@ -267,7 +266,7 @@ class Tray():
                         )
                     }
 
-        self.icon = pystray.Icon("20-20-20 Timer", icon=self.draw_arc(16, "blue", self._end_angle()), menu=self.idle_menu)
+        self.icon = pystray.Icon("20-20-20 Timer", icon=self.draw_arc(16, "blue", self._end_angle()), menu=self.menus[Mode.IDLE])
         
     def _dummy(self):
         pass
@@ -316,7 +315,7 @@ class Timer():
         self.pause_start_time = None
         self.total_pause_duration = 0
 
-        self.is_running = False
+        self.mode = Mode.IDLE
 
     def elapsed(self):
         return int(time.monotonic() - self.phase_start_time) - self.total_pause_duration
@@ -329,7 +328,7 @@ class Timer():
 
     def start(self):
         self.phase_start_time = time.monotonic()
-        self.is_running = True
+        self.mode = Mode.RUNNING
         self.total_pause_duration = 0
 
     def is_phase_over(self):
@@ -337,24 +336,24 @@ class Timer():
 
     def step_phase(self):
         self.curr_phase = self.phases[(self.phases.index(self.curr_phase) + 1) % len(self.phases)]
-        self.is_running = False
+        self.mode = Mode.IDLE
 
     def pause(self):
         self.pause_start_time = time.monotonic()
-        self.is_running = False
+        self.mode = Mode.PAUSED
 
     def resume(self):
         pause_end_time = time.monotonic()
         self.total_pause_duration += int(pause_end_time - self.pause_start_time)
         self.pause_start_time = None
-        self.is_running = True
+        self.mode = Mode.RUNNING
 
     def reset(self):
         self.phase_start_time = 0
         self.pause_start_time = None
         self.total_pause_duration = 0
         self.curr_phase = self.phases[0]
-        self.is_running = False
+        self.mode = Mode.IDLE
 
 def format_seconds(s):
     (mm,ss) = divmod(s, 60)

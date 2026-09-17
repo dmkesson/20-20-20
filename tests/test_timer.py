@@ -1,4 +1,4 @@
-from TimerApp import Phases, Timer, format_seconds
+from TimerApp import Phases, Timer, format_seconds, Mode
 from time import sleep
 
 phase1 = Phases("1", 1, "abc")
@@ -19,6 +19,11 @@ def test_step_phase_loop():
     assert myTimer.curr_phase is phase2
     myTimer.step_phase()
     assert myTimer.curr_phase is myTimer.phases[0]
+
+def test_mode_running():
+    myTimer = Timer([phase1, phase2])
+    myTimer.start()
+    assert myTimer.mode is Mode.RUNNING
 
 # tests remaining(), but by extension elapsed() and start()
 def test_remaining():
@@ -52,7 +57,7 @@ def test_pause_resume():
     myTimer.start()
     sleep(1)
     myTimer.pause()
-    assert not myTimer.is_running 
+    assert myTimer.mode is Mode.PAUSED
     sleep(2)
     myTimer.resume()
     sleep(1)
@@ -84,7 +89,7 @@ def test_reset():
     sleep(2)
     myTimer.reset()
     assert myTimer.curr_phase.duration == 1
-    assert not myTimer.is_running
+    assert myTimer.mode is Mode.IDLE
 
 def test_elapsed_fraction():
     myTimer = Timer([phase2, phase3])
