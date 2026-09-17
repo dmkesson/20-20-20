@@ -131,11 +131,15 @@ class Gui():
             if self.system_auto_mode.get():
                 self.auto_tick_id = self.root.after(5000, self.start_timer)
             self._set_meter_non_timer("Complete!")
+            if SYSTRAY:
+                self._update_systray_icon()
             self._set_button1_continue()
             self._set_button2_restart()
             return
 
         self._set_meter()
+        if SYSTRAY:
+            self._update_systray_icon()
         self.tick_id = self.root.after(1000, self.meter_tick)
 
     def _set_meter(self):
@@ -146,6 +150,9 @@ class Gui():
     def _set_meter_non_timer(self, string):
         self.meter.configure(bootstyle="secondary", amountused=1, amounttotal=1, subtext=self.timer.curr_phase.name)
         self.meter.amountuseddisplayvar.set(string)
+
+    def _update_systray_icon(self):
+        self.tray.update_icon()
     
     def start_timer(self):
         if self.tick_id is not None:
@@ -216,7 +223,7 @@ class Tray():
             pystray.MenuItem("Quit", self._quit_on_clicked)
             )
 
-        self.icon = pystray.Icon("20-20-20 Timer", icon=self.draw_pie(16, "blue"), menu=self.menu)
+        self.icon = pystray.Icon("20-20-20 Timer", icon=self.draw_arc(16, "blue", self._end_angle()), menu=self.start_menu)
         
     def dummy(self):
         pass
@@ -234,14 +241,18 @@ class Tray():
     def _quit_on_clicked(self):
         self.queue.put("quit")
 
-    def draw_pie(self, dimension, colour):#
+    def draw_arc(self, dimension, colour, angle):#
         image = Image.new("RGBA", (dimension, dimension), "white")
         draw = ImageDraw.Draw(image)
-        draw.pieslice([2, 2, 13, 13], 90, self._end_angle(), fill=colour, outline=colour)
+        draw.arc([2, 2, 13, 13], 270, angle, width=2, fill=colour)
         return image
 
     def _end_angle(self):
-        return self.timer.elapsed_fraction() * 360 + 90
+        return self.timer.elapsed_fraction() * 360 + 270
+
+    def update_icon(self):
+        print("updating icon!")
+        self.icon.icon = self.draw_arc(16, "blue", self._end_angle())
 
     def start_thread(self):
         Thread(target=lambda: self.icon.run(), daemon=True).start()
