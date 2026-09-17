@@ -57,7 +57,7 @@ class Gui():
         self._build_toggles()
 
         if SYSTRAY:
-            self.systray_queue = Queue() # for callbacks from the tray icon
+            self.systray_queue = Queue()
             self.tray = Tray(self.systray_queue, self.timer)
             self.systray_commands = {
                 Command.OPEN: lambda: self.root.deiconify(),
@@ -92,11 +92,9 @@ class Gui():
 
     def _set_button1_pause(self):
         self.button1.configure(command=self.pause_timer, text="Pause")
-        print("set_button1_pause ran!")
 
     def _set_button1_resume(self):
         self.button1.configure(command=self.resume_timer, text="Resume")
-        print("set_button1_resume ran!")
 
     def _set_button2_restart(self):
         self.button2.configure(command=self.reset_timer, bootstyle="danger")
@@ -136,7 +134,6 @@ class Gui():
             self.user_auto_mode = True
 
     def on_systray_toggle(self):
-        #need to turn on auto mode, grey out auto mode toggle, and remember previous user preferece
         if self.systray_mode.get():
             self.system_auto_mode.set(True)
             self.auto_toggle.state(["disabled"])
@@ -148,11 +145,8 @@ class Gui():
 
     def poll_tray(self):
         while self.systray_queue.qsize() > 0:
-            print("queue has entry!")
             command = self.systray_queue.get()
-            print("got command")
             self.systray_commands[command]()
-            print("sent command!")
 
         self.root.after(100, self.poll_tray)
         
@@ -206,16 +200,12 @@ class Gui():
         self.meter_tick()
 
     def pause_timer(self):
-        print("pause_timer function ran")
         if self.timer.mode is not Mode.RUNNING:
             return        
         self.root.after_cancel(self.tick_id)
         self.tick_id = None
-        print("cancelled tickId")
         self.timer.pause()
-        print("cancelled timer")
         self._set_button1_resume()
-        print("changed button1 to resume")
         self._set_button2_restart()
         self.tray.menu_change(Mode.PAUSED)
 
