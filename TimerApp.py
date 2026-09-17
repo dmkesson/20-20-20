@@ -44,8 +44,8 @@ class Gui():
         self._build_toggles()
 
         if SYSTRAY:
-            self.tray = Tray(self.timer)
-            self.systray_queue = Queue()
+            self.systray_queue = Queue() # for callbacks from the tray icon
+            self.tray = Tray(self.systray_queue, self.timer)
             self.tray.start_thread()
 
     def _build_meter(self):
@@ -118,9 +118,11 @@ class Gui():
         if self.systray_mode.get():
             self.system_auto_mode.set(True)
             self.auto_toggle.state(["disabled"])
+            self.root.protocol("WM_DELETE_WINDOW", self.root.withdraw)
         else:
             self.auto_toggle.state(["!disabled"])
             self.system_auto_mode.set(self.user_auto_mode)
+            self.root.protocol("WM_DELETE_WINDOW", self.root.destroy)
 
     def meter_tick(self):
         if self.timer.is_phase_over():
@@ -202,9 +204,22 @@ class Gui():
         self.root.mainloop()
 
 class Tray():
-    def __init__(self, timer):
+    def __init__(self, queue, timer):
+        self.queue = queue
         self.timer = timer
-        self.icon = pystray.Icon("20-20-20 Timer", icon=self.draw_pie(16, "blue"))
+        self.menu = pystray.Menu(
+            pystray.MenuItem("20-20-20 Timer", self.dummy, enabled=False),
+            pystray.Menu.SEPARATOR,
+            pystray.MenuItem("Open App", self._open_on_clicked)
+        )
+
+        self.icon = pystray.Icon("20-20-20 Timer", icon=self.draw_pie(16, "blue"), menu=self.menu)
+        
+    def dummy(self):
+        pass
+
+    def _open_on_clicked(self, icon, item):
+        self.queue.put()
 
     def draw_pie(self, dimension, colour):#
         image = Image.new("RGBA", (dimension, dimension), "white")
@@ -212,11 +227,11 @@ class Tray():
         draw.pieslice([2, 2, 13, 13], 90, self._end_angle(), fill=colour, outline=colour)
         return image
 
-    def start_thread(self):
-        Thread(target=lambda: self.icon.run(), daemon=True).start()
-
     def _end_angle(self):
         return self.timer.elapsed_fraction() * 360 + 90
+
+    def start_thread(self):
+        Thread(target=lambda: self.icon.run(), daemon=True).start()
 
 class Timer():
     def __init__(self, phases):
