@@ -43,7 +43,7 @@ class Gui():
         self.system_auto_mode = ttk.BooleanVar()
         self.systray_mode = ttk.BooleanVar()
 
-        self.work = Phases("Work", 5, "primary")
+        self.work = Phases("Work", 20, "primary")
         self.eye_rest = Phases("Eye Rest", 4, "success")
 
         self.timer = Timer([self.work, self.eye_rest])
@@ -58,6 +58,12 @@ class Gui():
         if SYSTRAY:
             self.systray_queue = Queue() # for callbacks from the tray icon
             self.tray = Tray(self.systray_queue, self.timer)
+            self.systray_commands = {
+                Command.OPEN: lambda: self.root.deiconify(),
+                Command.QUIT: lambda: self.root.destroy(),
+                Command.PAUSE: lambda: self.pause_timer(),
+                Command.RESUME: lambda: self.resume_timer()
+                }
             self.tray.start_thread()
             self.poll_tray()
 
@@ -139,12 +145,11 @@ class Gui():
 
     def poll_tray(self):
         while self.systray_queue.qsize() > 0:
+            print("queue has entry!")
             command = self.systray_queue.get()
-            if command == Command.OPEN:
-                self.root.deiconify()
-            elif command == Command.QUIT:
-                self.tray.quit_icon()
-                self.root.destroy()
+            print("got command")
+            self.systray_commands[command]()
+            print("sent command!")
 
         self.root.after(100, self.poll_tray)
         
@@ -160,7 +165,7 @@ class Gui():
             self._set_button1_continue()
             self._set_button2_restart()
             return
-
+        
         self._set_meter()
         if SYSTRAY:
             self._update_systray_icon()
@@ -189,9 +194,11 @@ class Gui():
             return
         
         self.meter.amounttotalvar.set(self.timer.curr_phase.duration)
+        self.timer.start()
         self._set_button1_pause()
         self._set_button2_none()
-        self.timer.start()
+        if SYSTRAY:
+            self.tray.menu_change(Mode.RUNNING)
         self.meter_tick()
 
     def pause_timer(self):
@@ -206,14 +213,17 @@ class Gui():
         self._set_button1_resume()
         print("changed button1 to resume")
         self._set_button2_restart()
+        self.tray.menu_change(Mode.PAUSED)
 
     def resume_timer(self):
         if self.timer.mode is Mode.RUNNING:
             return
 
+        self.timer.resume()
         self._set_button1_pause()
         self._set_button2_none()
-        self.timer.resume()
+        if SYSTRAY:
+            self.tray.menu_change(Mode.RUNNING)
         self.meter_tick()
 
     def reset_timer(self):
@@ -228,6 +238,8 @@ class Gui():
         self.timer.reset()
         self._set_button1_start()
         self._set_button2_none()
+        if SYSTRAY:
+            self.tray.menu_change(Mode.IDLE)
         self._set_meter_non_timer("Begin!")
 
     def run(self):
@@ -296,7 +308,7 @@ class Tray():
         print("updating icon!")
         self.icon.icon = self.draw_arc(16, "blue", self._end_angle())
 
-    def change_menu(self, mode):
+    def menu_change(self, mode):
         self.icon.menu = self.menus[mode]
 
     def start_thread(self):
