@@ -1,5 +1,6 @@
 import tkinter as tk
 import ttkbootstrap as ttk
+from ttkbootstrap.widgets import ToolTip
 import time
 from dataclasses import dataclass
 from enum import Enum, auto
@@ -105,7 +106,7 @@ class Gui():
 
     def _build_toggles(self):
         toggle_frame = ttk.Frame(self.root, padding=10)
-
+        
         auto_toggle_frame = ttk.Frame(toggle_frame)
         self.auto_toggle = ttk.Checkbutton(auto_toggle_frame, bootstyle="square toggle", variable=self.system_auto_mode, command=self.on_auto_toggle)
         self.auto_toggle.pack()
@@ -113,11 +114,13 @@ class Gui():
         self.auto_label.pack()
         auto_toggle_frame.pack(side="left", padx=15, anchor="center")
 
+        ToolTip(auto_toggle_frame, text="Automatically continues after 5 seconds \nLocked ON when minimise to tray is active", bootstyle="secondary")
+
         if SYSTRAY:
             systray_toggle_frame = ttk.Frame(toggle_frame)
             self.systray_toggle = ttk.Checkbutton(systray_toggle_frame, bootstyle="square toggle", variable=self.systray_mode, command=self.on_systray_toggle)
             self.systray_toggle.pack()
-            self.systray_label = ttk.Label(systray_toggle_frame, text="Minimize on close", bootstyle="secondary")
+            self.systray_label = ttk.Label(systray_toggle_frame, text="Minimise on close", bootstyle="secondary")
             self.systray_label.pack()
             systray_toggle_frame.pack(side="right", anchor="center")
 
@@ -162,6 +165,7 @@ class Gui():
             self._set_meter_non_timer("Complete!")
             if SYSTRAY:
                 self._update_systray_icon()
+                self.tray.menu_change(Mode.IDLE)
             self._set_button1_continue()
             self._set_button2_restart()
             return
@@ -251,7 +255,7 @@ class Tray():
         self.timer = timer
         self.menus = {Mode.IDLE:
                         pystray.Menu(
-                        pystray.MenuItem("20-20-20 Timer", self._on_open),
+                        pystray.MenuItem("20-20-20 Timer", self._on_open, default=True),
                         pystray.Menu.SEPARATOR,
                         pystray.MenuItem("Resume", self._on_resume, enabled=False),
                         pystray.MenuItem("Pause", self._on_pause, enabled=False),
@@ -260,7 +264,7 @@ class Tray():
                         ),
                     Mode.RUNNING:
                         pystray.Menu(
-                        pystray.MenuItem("20-20-20 Timer", self._on_open),
+                        pystray.MenuItem("20-20-20 Timer", self._on_open, default=True),
                         pystray.Menu.SEPARATOR,
                         pystray.MenuItem("Resume", self._on_resume, enabled=False),
                         pystray.MenuItem("Pause", self._on_pause, enabled=True),
@@ -269,7 +273,7 @@ class Tray():
                         ),
                     Mode.PAUSED:
                         pystray.Menu(
-                        pystray.MenuItem("20-20-20 Timer", self._on_open),
+                        pystray.MenuItem("20-20-20 Timer", self._on_open, default=True),
                         pystray.Menu.SEPARATOR,
                         pystray.MenuItem("Resume", self._on_resume, enabled=True),
                         pystray.MenuItem("Pause", self._on_pause, enabled=False),
@@ -305,7 +309,6 @@ class Tray():
         return self.timer.elapsed_fraction() * 360 + 270
 
     def update_icon(self):
-        print("updating icon!")
         self.icon.icon = self.draw_arc(16, "blue", self._end_angle())
 
     def menu_change(self, mode):
