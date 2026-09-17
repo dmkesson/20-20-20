@@ -26,6 +26,12 @@ class Mode(Enum):
     RUNNING = auto()
     PAUSED = auto()
 
+class Command(Enum):
+    OPEN = auto()
+    RESUME = auto()
+    PAUSE = auto()
+    QUIT = auto()
+
 class Gui():
     def __init__(self):
         self.root = ttk.Window()
@@ -133,10 +139,10 @@ class Gui():
 
     def poll_tray(self):
         while self.systray_queue.qsize() > 0:
-            flag = self.systray_queue.get()
-            if flag == "open":
+            command = self.systray_queue.get()
+            if command == Command.OPEN:
                 self.root.deiconify()
-            elif flag == "quit":
+            elif command == Command.QUIT:
                 self.tray.quit_icon()
                 self.root.destroy()
 
@@ -267,16 +273,16 @@ class Tray():
         pass
 
     def _on_open(self):
-        self.queue.put("open")
+        self.queue.put(Command.OPEN)
 
     def _on_resume(self):
-        self.queue.put("continue")
+        self.queue.put(Command.RESUME)
 
     def _on_pause(self):
-        self.queue.put("pause")
+        self.queue.put(Command.PAUSE)
 
     def _on_quit(self):
-        self.queue.put("quit")
+        self.queue.put(Command.QUIT)
 
     def draw_arc(self, dimension, colour, angle):#
         image = Image.new("RGBA", (dimension, dimension), "white")
